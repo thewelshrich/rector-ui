@@ -78,6 +78,12 @@ body {
   padding: 28px 32px;
 }
 
+.analysis-state {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .status-grid {
   display: flex;
   gap: 24px;
@@ -85,8 +91,23 @@ body {
   margin: 18px 0 0;
 }
 
+.project-grid {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 18px 0 0;
+}
+
 .status-grid div {
   min-width: 180px;
+}
+
+.project-grid div {
+  min-width: 220px;
+}
+
+.project-grid-full {
+  flex-basis: 100%;
 }
 
 dt {
@@ -116,6 +137,66 @@ dd {
 
 .error {
   color: #b42318;
+}
+
+.status-good {
+  color: #166534;
+}
+
+.status-missing {
+  color: #9f1239;
+}
+
+.path-value {
+  word-break: break-word;
+}
+
+.action-button {
+  align-self: flex-start;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.analysis-result {
+  margin-top: 20px;
+}
+
+.code-block-inline {
+  font-family: "SFMono-Regular", "SF Mono", Monaco, Consolas, monospace;
+  font-size: 0.95rem;
+}
+
+.output-block {
+  margin-top: 18px;
+}
+
+.output-block h3 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
+.output-block pre {
+  margin: 0;
+  padding: 14px;
+  overflow-x: auto;
+  border-radius: 16px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 @media (max-width: 720px) {

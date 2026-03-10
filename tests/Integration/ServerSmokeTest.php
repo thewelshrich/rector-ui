@@ -61,13 +61,86 @@ class ServerSmokeTest extends TestCase
         $this->assertSame('ok', $health['status']);
     }
 
+    public function test_cli_server_reports_project_context_for_target_directory(): void
+    {
+        $port = 8101;
+        $projectDirectory = sys_get_temp_dir() . '/rector-ui-integration-' . uniqid('', true);
+        mkdir($projectDirectory, 0777, true);
+        $projectDirectory = realpath($projectDirectory) ?: $projectDirectory;
+        file_put_contents($projectDirectory . '/composer.json', "{}\n");
+        file_put_contents($projectDirectory . '/rector.php.dist', "<?php\n");
+        mkdir($projectDirectory . '/vendor', 0777, true);
+        mkdir($projectDirectory . '/vendor/bin', 0777, true);
+        file_put_contents($projectDirectory . '/vendor/bin/rector', "#!/usr/bin/env php\n");
+
+        $this->process = $this->startServerProcess($port, array(), $projectDirectory);
+        $this->assertIsResource($this->process);
+        $this->waitForServer($port);
+
+        $project = json_decode((string) file_get_contents('http://127.0.0.1:' . $port . '/api/project'), true);
+
+        $this->assertSame('ok', $project['status']);
+        $this->assertSame($projectDirectory, $project['path']);
+        $this->assertTrue($project['hasComposerJson']);
+        $this->assertTrue($project['hasRectorBinary']);
+        $this->assertTrue($project['hasRectorConfig']);
+        $this->assertTrue($project['hasRectorAnalysis']);
+        $this->assertSame($projectDirectory . '/rector.php.dist', $project['rectorConfigPath']);
+    }
+
+    public function test_cli_server_reports_unavailable_analysis_without_rector_setup(): void
+    {
+        $port = 8102;
+        $projectDirectory = sys_get_temp_dir() . '/rector-ui-analysis-missing-' . uniqid('', true);
+        mkdir($projectDirectory, 0777, true);
+        $projectDirectory = realpath($projectDirectory) ?: $projectDirectory;
+        file_put_contents($projectDirectory . '/composer.json', "{}\n");
+
+        $this->process = $this->startServerProcess($port, array(), $projectDirectory);
+        $this->assertIsResource($this->process);
+        $this->waitForServer($port);
+
+        $analysis = json_decode($this->postJson('http://127.0.0.1:' . $port . '/api/analysis'), true);
+
+        $this->assertFalse($analysis['available']);
+        $this->assertSame('unavailable', $analysis['status']);
+    }
+
+    public function test_cli_server_runs_stubbed_rector_dry_run(): void
+    {
+        $port = 8103;
+        $projectDirectory = sys_get_temp_dir() . '/rector-ui-analysis-ready-' . uniqid('', true);
+        mkdir($projectDirectory, 0777, true);
+        $projectDirectory = realpath($projectDirectory) ?: $projectDirectory;
+        file_put_contents($projectDirectory . '/composer.json', "{}\n");
+        file_put_contents($projectDirectory . '/rector.php', "<?php\n");
+        mkdir($projectDirectory . '/vendor', 0777, true);
+        mkdir($projectDirectory . '/vendor/bin', 0777, true);
+        file_put_contents(
+            $projectDirectory . '/vendor/bin/rector',
+            "#!/usr/bin/env php\n<?php\necho json_encode(['totals' => ['changed_files' => 2]]);\n"
+        );
+        chmod($projectDirectory . '/vendor/bin/rector', 0755);
+
+        $this->process = $this->startServerProcess($port, array(), $projectDirectory);
+        $this->assertIsResource($this->process);
+        $this->waitForServer($port);
+
+        $analysis = json_decode($this->postJson('http://127.0.0.1:' . $port . '/api/analysis'), true);
+
+        $this->assertTrue($analysis['available']);
+        $this->assertSame('success', $analysis['status']);
+        $this->assertSame(2, $analysis['changedFilesCount']);
+    }
+
     /**
      * @param array<string, string> $environment
      * @return resource
      */
-    private function startServerProcess(int $port, array $environment = array())
+    private function startServerProcess(int $port, array $environment = array(), ?string $workingDirectory = null)
     {
         $command = sprintf('php %s/bin/rector-ui --no-open --port=%d', dirname(__DIR__, 2), $port);
+        $processEnvironment = $environment === array() ? null : array_merge($_ENV, $environment);
 
         return proc_open(
             $command,
@@ -77,8 +150,8 @@ class ServerSmokeTest extends TestCase
                 2 => array('pipe', 'w'),
             ),
             $this->pipes,
-            dirname(__DIR__, 2),
-            $environment
+            $workingDirectory ?: dirname(__DIR__, 2),
+            $processEnvironment
         );
     }
 
@@ -102,5 +175,18 @@ class ServerSmokeTest extends TestCase
         $stderr = isset($this->pipes[2]) ? stream_get_contents($this->pipes[2]) : '';
 
         $this->fail('Server did not start in time. STDOUT: ' . $stdout . ' STDERR: ' . $stderr);
+    }
+
+    private function postJson(string $url): string
+    {
+        $context = stream_context_create(array(
+            'http' => array(
+                'method' => 'POST',
+                'header' => "Content-Type: application/json\r\n",
+                'content' => '',
+            ),
+        ));
+
+        return (string) file_get_contents($url, false, $context);
     }
 }

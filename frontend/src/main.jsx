@@ -5,7 +5,12 @@ import './styles.css';
 
 function App() {
   const [health, setHealth] = useState(null);
-  const [error, setError] = useState('');
+  const [healthError, setHealthError] = useState('');
+  const [project, setProject] = useState(null);
+  const [projectError, setProjectError] = useState('');
+  const [analysis, setAnalysis] = useState(null);
+  const [analysisError, setAnalysisError] = useState('');
+  const [analysisLoading, setAnalysisLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -19,7 +24,20 @@ function App() {
       })
       .catch((requestError) => {
         if (active) {
-          setError(requestError.message || 'Unable to load health status.');
+          setHealthError(requestError.message || 'Unable to load health status.');
+        }
+      });
+
+    fetch('/api/project')
+      .then((response) => response.json())
+      .then((payload) => {
+        if (active) {
+          setProject(payload);
+        }
+      })
+      .catch((requestError) => {
+        if (active) {
+          setProjectError(requestError.message || 'Unable to load project context.');
         }
       });
 
@@ -27,6 +45,25 @@ function App() {
       active = false;
     };
   }, []);
+
+  function runAnalysis() {
+    setAnalysisLoading(true);
+    setAnalysisError('');
+
+    fetch('/api/analysis', {
+      method: 'POST'
+    })
+      .then((response) => response.json())
+      .then((payload) => {
+        setAnalysis(payload);
+      })
+      .catch((requestError) => {
+        setAnalysisError(requestError.message || 'Unable to run Rector dry-run.');
+      })
+      .finally(() => {
+        setAnalysisLoading(false);
+      });
+  }
 
   return (
     <div className="app-shell">
@@ -40,7 +77,7 @@ function App() {
 
       <section className="status-card">
         <h2>Server Status</h2>
-        {error ? <p className="error">{error}</p> : null}
+        {healthError ? <p className="error">{healthError}</p> : null}
         {health ? (
           <dl className="status-grid">
             <div>
@@ -64,11 +101,111 @@ function App() {
       <main className="placeholder-grid">
         <section>
           <h2>Repository</h2>
-          <p>Project selection and runtime detection will live here.</p>
+          {projectError ? <p className="error">{projectError}</p> : null}
+          {project ? (
+            <dl className="project-grid">
+              <div className="project-grid-full">
+                <dt>Target Path</dt>
+                <dd className="path-value">{project.path}</dd>
+              </div>
+              <div>
+                <dt>Git</dt>
+                <dd className={statusClass(project.isGitRepo)}>
+                  {project.isGitRepo ? `Repository (${project.gitStatus})` : 'Not a git repository'}
+                </dd>
+              </div>
+              <div>
+                <dt>composer.json</dt>
+                <dd className={statusClass(project.hasComposerJson)}>
+                  {project.hasComposerJson ? 'Found' : 'Missing'}
+                </dd>
+              </div>
+              <div>
+                <dt>Rector Binary</dt>
+                <dd className={statusClass(project.hasRectorBinary)}>
+                  {project.hasRectorBinary ? 'Found' : 'Missing'}
+                </dd>
+              </div>
+              <div className="project-grid-full">
+                <dt>Rector Config</dt>
+                <dd className={statusClass(project.hasRectorConfig)}>
+                  {project.hasRectorConfig
+                    ? `Found at ${project.rectorConfigPath}`
+                    : 'No rector.php or rector.php.dist found'}
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <p>Detecting project readiness...</p>
+          )}
         </section>
         <section>
           <h2>Analysis</h2>
-          <p>Rector dry-run orchestration will be added after the scaffold milestone.</p>
+          {project && !project.hasRectorAnalysis ? (
+            <div className="analysis-state">
+              <p className="status-missing">
+                Analysis is unavailable until this project has both a Rector config and a local
+                `vendor/bin/rector` binary.
+              </p>
+              <button type="button" className="action-button" disabled>
+                Run dry-run
+              </button>
+            </div>
+          ) : (
+            <div className="analysis-state">
+              <button
+                type="button"
+                className="action-button"
+                onClick={runAnalysis}
+                disabled={analysisLoading || !project}
+              >
+                {analysisLoading ? 'Running dry-run...' : 'Run dry-run'}
+              </button>
+            </div>
+          )}
+          {analysisError ? <p className="error">{analysisError}</p> : null}
+          {analysis ? (
+            <div className="analysis-result">
+              <dl className="project-grid">
+                <div>
+                  <dt>Status</dt>
+                  <dd className={statusClass(analysis.status === 'success')}>
+                    {analysis.status}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Available</dt>
+                  <dd className={statusClass(analysis.available)}>
+                    {analysis.available ? 'Yes' : 'No'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Changed Files</dt>
+                  <dd>{analysis.changedFilesCount ?? 'Unknown'}</dd>
+                </div>
+                <div>
+                  <dt>Exit Code</dt>
+                  <dd>{analysis.exitCode ?? 'N/A'}</dd>
+                </div>
+                <div className="project-grid-full">
+                  <dt>Command</dt>
+                  <dd className="code-block-inline">{analysis.command || 'Unavailable'}</dd>
+                </div>
+              </dl>
+
+              <div className="output-block">
+                <h3>Raw Output</h3>
+                <pre>{analysis.stdout || 'No stdout returned.'}</pre>
+              </div>
+
+              {analysis.stderr ? (
+                <div className="output-block">
+                  <h3>Errors</h3>
+                  <pre>{analysis.stderr}</pre>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </section>
         <section>
           <h2>Review</h2>
@@ -77,6 +214,10 @@ function App() {
       </main>
     </div>
   );
+}
+
+function statusClass(isReady) {
+  return isReady ? 'status-good' : 'status-missing';
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

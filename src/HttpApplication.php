@@ -32,6 +32,14 @@ final class HttpApplication
             return $this->apiController->metaResponse();
         }
 
+        if ($path === '/api/project') {
+            return $this->apiController->projectResponse();
+        }
+
+        if ($path === '/api/analysis' && $request->getMethod() === 'POST') {
+            return $this->apiController->analysisResponse();
+        }
+
         if (strpos($path, '/api/') === 0) {
             return new Response(404, array('Content-Type' => 'application/json'), '{"error":"Not Found"}');
         }

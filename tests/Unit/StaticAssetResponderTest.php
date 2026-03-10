@@ -42,6 +42,30 @@ class StaticAssetResponderTest extends TestCase
         $this->assertSame('ok', $payload['status']);
     }
 
+    public function test_it_routes_project_requests_to_api_controller(): void
+    {
+        $app = $this->createApplication();
+
+        $response = $app(new ServerRequest('GET', 'http://localhost/api/project'));
+        $payload = json_decode((string) $response->getBody(), true);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertArrayHasKey('path', $payload);
+        $this->assertArrayHasKey('hasComposerJson', $payload);
+    }
+
+    public function test_it_routes_analysis_posts_to_api_controller(): void
+    {
+        $app = $this->createApplication();
+
+        $response = $app(new ServerRequest('POST', 'http://localhost/api/analysis'));
+        $payload = json_decode((string) $response->getBody(), true);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertArrayHasKey('available', $payload);
+        $this->assertArrayHasKey('status', $payload);
+    }
+
     public function test_it_serves_vite_html_shell_in_dev_mode(): void
     {
         $app = $this->createApplication(true);
