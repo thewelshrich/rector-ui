@@ -15,9 +15,19 @@ import {
   SidebarRail
 } from '@/components/ui/sidebar';
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+
 import { FileTreeNode } from '@/components/sidebar/file-tree-node';
 
 export function AppSidebar({ model, activePath, onSelectFile, project, analysis }) {
+  const [viewMode, setViewMode] = React.useState('files');
+
   return (
     <Sidebar collapsible="icon" variant="inset" style={{ '--sidebar-width': '20rem' }}>
       <SidebarHeader>
@@ -34,6 +44,17 @@ export function AppSidebar({ model, activePath, onSelectFile, project, analysis 
                 </span>
               </div>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Select value={viewMode} onValueChange={setViewMode}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Browse by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="files">Files</SelectItem>
+                <SelectItem value="rules">Rules</SelectItem>
+              </SelectContent>
+            </Select>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
