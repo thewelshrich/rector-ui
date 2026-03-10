@@ -1,6 +1,6 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import ReactDOM from 'react-dom/client';
-import { useEffect, useState } from 'react';
+import {Button} from '@/components/ui/button';
 import './styles.css';
 
 function App() {
@@ -147,20 +147,20 @@ function App() {
                 Analysis is unavailable until this project has both a Rector config and a local
                 `vendor/bin/rector` binary.
               </p>
-              <button type="button" className="action-button" disabled>
+              <Button type="button" className="action-button" disabled>
                 Run dry-run
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="analysis-state">
-              <button
+              <Button
                 type="button"
                 className="action-button"
                 onClick={runAnalysis}
                 disabled={analysisLoading || !project}
               >
                 {analysisLoading ? 'Running dry-run...' : 'Run dry-run'}
-              </button>
+              </Button>
             </div>
           )}
           {analysisError ? <p className="error">{analysisError}</p> : null}
