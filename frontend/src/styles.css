@@ -1,0 +1,132 @@
+:root {
+  color-scheme: light;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #102033;
+  background:
+    radial-gradient(circle at top left, rgba(72, 187, 120, 0.22), transparent 32%),
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), transparent 28%),
+    linear-gradient(180deg, #f6fbff 0%, #edf4f8 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 56px 0 72px;
+}
+
+.hero {
+  padding: 32px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(16, 32, 51, 0.08);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  color: #0f766e;
+}
+
+.hero h1,
+.status-card h2,
+.placeholder-grid h2 {
+  font-family: "Sora", "Space Grotesk", sans-serif;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.8rem, 8vw, 5rem);
+  line-height: 0.95;
+}
+
+.lede {
+  max-width: 42rem;
+  margin: 16px 0 0;
+  font-size: 1.05rem;
+  color: #355069;
+}
+
+.status-card,
+.placeholder-grid section {
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(16, 32, 51, 0.08);
+  box-shadow: 0 16px 50px rgba(15, 23, 42, 0.06);
+}
+
+.status-card {
+  margin-top: 28px;
+  padding: 28px 32px;
+}
+
+.status-grid {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 18px 0 0;
+}
+
+.status-grid div {
+  min-width: 180px;
+}
+
+dt {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #577189;
+}
+
+dd {
+  margin: 8px 0 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.placeholder-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.placeholder-grid section {
+  flex: 1 1 280px;
+  padding: 24px;
+}
+
+.error {
+  color: #b42318;
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 24px, 1120px);
+    padding-top: 24px;
+  }
+
+  .hero,
+  .status-card,
+  .placeholder-grid section {
+    padding: 20px;
+  }
+}

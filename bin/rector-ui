@@ -1,0 +1,46 @@
+#!/usr/bin/env php
+<?php
+
+$autoloadPaths = array(
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php',
+);
+
+$autoloadFound = false;
+
+foreach ($autoloadPaths as $autoloadPath) {
+    if (file_exists($autoloadPath)) {
+        require $autoloadPath;
+        $autoloadFound = true;
+        break;
+    }
+}
+
+if (! $autoloadFound) {
+    fwrite(STDERR, "Unable to locate Composer autoload file.\n");
+    exit(1);
+}
+
+$config = RectorUi\ServerConfig::fromArgv($argv);
+
+if ($config->isHelpRequested()) {
+    fwrite(STDOUT, "Rector UI\n");
+    fwrite(STDOUT, "Usage: vendor/bin/rector-ui [--host=127.0.0.1] [--port=8080] [--no-open]\n");
+    exit(0);
+}
+
+$server = new RectorUi\Server(
+    $config,
+    new RectorUi\HttpApplication(
+        new RectorUi\StaticAssetResponder(__DIR__ . '/../public', $config->isDevMode(), $config->getDevServerUrl()),
+        new RectorUi\ApiController(RectorUi\ApplicationVersion::get(), new RectorUi\RectorIntegrationStatusProvider())
+    ),
+    new RectorUi\BrowserLauncher()
+);
+
+try {
+    $server->run();
+} catch (\Throwable $throwable) {
+    fwrite(STDERR, $throwable->getMessage() . "\n");
+    exit(1);
+}

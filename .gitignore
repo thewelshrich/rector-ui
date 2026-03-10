@@ -1,2 +1,5 @@
 .idea
 .notes
+vendor
+frontend/node_modules
+.phpunit.result.cache
