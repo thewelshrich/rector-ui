@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - run: composer install --no-interaction --prefer-dist
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: composer test
+      - run: composer smoke
+
+      - name: Prepare release bundle
+        run: |
+          mkdir -p dist
+          zip -r "dist/rector-ui-${GITHUB_SHA}.zip" \
+            bin \
+            src \
+            public \
+            tests \
+            .github \
+            composer.json \
+            composer.lock \
+            phpunit.xml.dist \
+            README.md
+
+      - name: Create GitHub prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: main-${{ github.run_number }}
+          name: Main build ${{ github.run_number }}
+          prerelease: true
+          generate_release_notes: true
+          files: dist/rector-ui-${{ github.sha }}.zip
