@@ -4,7 +4,7 @@ vendor
 frontend/node_modules
 .phpunit.result.cache
 
-# ── GSD baseline (auto-generated) ──
+.gsd
 .gsd/activity/
 .gsd/runtime/
 .gsd/auto.lock
