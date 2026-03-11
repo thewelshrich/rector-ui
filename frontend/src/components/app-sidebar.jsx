@@ -24,12 +24,13 @@ import {
 } from '@/components/ui/select';
 
 import { FileTreeNode } from '@/components/sidebar/file-tree-node';
+import {RuleTreeNode} from '@/components/sidebar/rule-tree-node';
 
 export function AppSidebar({ model, activePath, onSelectFile, project, analysis }) {
   const [viewMode, setViewMode] = React.useState('files');
 
   return (
-    <Sidebar collapsible="icon" variant="inset" style={{ '--sidebar-width': '20rem' }}>
+      <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -83,10 +84,31 @@ export function AppSidebar({ model, activePath, onSelectFile, project, analysis 
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Changed files</SidebarGroupLabel>
+            <SidebarGroupLabel>
+                {viewMode === 'rules' ? 'Applied rules' : 'Changed files'}
+            </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {model.tree.length > 0 ? (
+                {viewMode === 'rules' ? (
+                    model.rulesTree.length > 0 ? (
+                        model.rulesTree.map((item) => (
+                            <RuleTreeNode
+                                key={item.rule}
+                                rule={item.rule}
+                                files={item.files}
+                                activePath={activePath}
+                                onSelectFile={onSelectFile}
+                            />
+                        ))
+                    ) : (
+                        <SidebarMenuItem>
+                            <div
+                                className="rounded-md border border-dashed border-sidebar-border px-3 py-3 text-sm text-muted-foreground">
+                                Run analysis to see applied rules.
+                            </div>
+                        </SidebarMenuItem>
+                    )
+                ) : model.tree.length > 0 ? (
                 model.tree.map((node) => (
                   <FileTreeNode
                     key={node.key}
