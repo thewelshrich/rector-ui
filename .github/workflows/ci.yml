@@ -1,27 +1,53 @@
 name: CI
 
 on:
-  pull_request:
-  push:
-    branches-ignore:
-      - main
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
 
 jobs:
-  php-tests:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['7.3', '7.4', '8.1', '8.2']
-    steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-      - uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ runner.os }}-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
-      - run: composer install --no-interaction --prefer-dist
-      - run: composer test
-      - run: composer smoke
+    test:
+        name: PHP ${{ matrix.php-version }} Tests
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                php-version: ['8.1', '8.2', '8.3']
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup PHP ${{ matrix.php-version }}
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: ${{ matrix.php-version }}
+                  coverage: xdebug
+                  tools: composer
+
+            - name: Install Composer dependencies
+              run: composer install --prefer-dist --no-progress --no-interaction
+
+            - name: Run PHPUnit
+              run: vendor/bin/phpunit --colors=always --testdox
+
+    coding-standards:
+        name: PHP Coding Standards
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.2'
+                  tools: composer
+
+            - name: Install Composer dependencies
+              run: composer install --prefer-dist --no-progress --no-interaction
+
+            - name: Run PHP-CS-Fixer
+              run: vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
