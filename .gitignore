@@ -1,2 +1,10 @@
-.idea
-.notes
+.idea/
+.notes/
+vendor/
+node_modules/
+.phpunit.result.cache
+.phpunit.cache/
+composer.lock
+*.cache
+storage/logs/*
+storage/sessions/*

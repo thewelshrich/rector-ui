@@ -1,0 +1,16 @@
+#!/usr/bin/env php
+
+<?php
+
+declare(strict_types=1);
+
+use RectorUi\Console\ServeCommand;
+use Symfony\Component\Console\Application;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$application = new Application('rector-ui', '0.1.0');
+
+$application->add(new ServeCommand());
+
+$application->run();
